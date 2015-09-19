@@ -51,6 +51,7 @@ namespace IsaRoGaMX.CFDI
    public class Concepto : baseObject {
       InformacionAduaneraConcepto infoAduanera;
       CuentaPredial cuentaPredial;
+      ComplementoConcepto complementoConcepto;
       Parte parte;
       
       /// <summary>

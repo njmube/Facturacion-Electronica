@@ -108,4 +108,22 @@ namespace IsaRoGaMX.CFDI
          }
       }
    }
+   
+   public class Nomina : ComplementoComprobante {
+      public Nomina() : base() {
+         atributos.Add("Version", "1.1");
+      }
+      
+      public Nomina(string version, string numEmpleado, string curp, string tipoRegimen, DateTime fechaPago, DateTime fechaInicial, DateTime fechaFinal, double numDiasPagados, string periodicidadPago) {
+         atributos.Add("Version", "1.1");
+         atributos.Add("NumEmpleado", numEmpleado);
+         atributos.Add("CURP", curp);
+         atributos.Add("TipoRegimen", tipoRegimen);
+         atributos.Add("FechaPago", Comprobante.FechaISO8601(fechaPago));
+         atributos.Add("FechaInicialPago", Comprobante.FechaISO8601(fechaInicial));
+         atributos.Add("FechaFinalPago", Comprobante.FechaISO8601(fechaFinal));
+         atributos.Add("NumDiasPagados", numDiasPagados.ToString());
+         atributos.Add("PeriodicidadPago", periodicidadPago);
+      }
+   }
 }
