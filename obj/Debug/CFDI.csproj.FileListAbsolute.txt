@@ -1,0 +1,5 @@
+C:\Users\IsaRoGaMX\Documents\SharpDevelop Projects\CFDI\CFDI\obj\Debug\CFDI.csprojResolveAssemblyReference.cache
+C:\Users\IsaRoGaMX\Documents\SharpDevelop Projects\CFDI\CFDI\bin\Debug\IsaRoGaMX.CFDI.dll
+C:\Users\IsaRoGaMX\Documents\SharpDevelop Projects\CFDI\CFDI\bin\Debug\IsaRoGaMX.CFDI.pdb
+C:\Users\IsaRoGaMX\Documents\SharpDevelop Projects\CFDI\CFDI\obj\Debug\IsaRoGaMX.CFDI.dll
+C:\Users\IsaRoGaMX\Documents\SharpDevelop Projects\CFDI\CFDI\obj\Debug\IsaRoGaMX.CFDI.pdb
