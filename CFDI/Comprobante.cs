@@ -26,6 +26,9 @@ namespace IsaRoGaMX.CFDI
 	   const string DEFAULT_VERSION = "3.2";
 	   internal static int decimales = 2;
 	   internal static string formatoDecimales = "#.";
+	   internal int nomina = -1;
+	   internal int timbreFiscal = -1;
+	   internal int iedu = -1;
 	   
 	   public static void Decimales(int digitos) {
 	      if(digitos > 0 && digitos < 7)
@@ -38,6 +41,14 @@ namespace IsaRoGaMX.CFDI
 	      if(complementos == null)
 	         complementos = new List<ComplementoComprobante>();
 	      complementos.Add(complemento);
+	      switch(complemento.GetType().Name) {
+	         case "TimbreFiscalDigital":
+	            timbreFiscal = complementos.Count -1;
+	            break;
+	         case "Nomina":
+	            nomina = complementos.Count -1;;
+	            break;
+	      }
 	   }
 	   
 	   internal XmlDocument Documento{
@@ -125,7 +136,7 @@ namespace IsaRoGaMX.CFDI
 	      if(receptor == null)
 	         throw new Exception("Comprobante::Comprobante. Receptor no puede ser nulo");
 	      atributos.Add("version", DEFAULT_VERSION);
-	      atributos.Add("fecha", Comprobante.FechaISO8601(fecha));
+	      atributos.Add("fecha", Conversiones.DateTimeFechaISO8601(fecha));
 	      atributos.Add("formaDePago", formaDePago);
 	      atributos.Add("subTotal", subTotal.ToString("#.000000"));
 	      atributos.Add("total", total.ToString("#.000000"));
@@ -150,7 +161,7 @@ namespace IsaRoGaMX.CFDI
 	      atributos.Add("version", DEFAULT_VERSION);
 	      atributos.Add("serie", serie);
 	      atributos.Add("folio", folio);
-	      atributos.Add("fecha", Comprobante.FechaISO8601(fecha));
+	      atributos.Add("fecha", Conversiones.DateTimeFechaISO8601(fecha));
 	      atributos.Add("sello", sello);
 	      atributos.Add("formaDePago", formaDePago);
 	      atributos.Add("noCertificado", noCertificado);
@@ -179,7 +190,7 @@ namespace IsaRoGaMX.CFDI
 	      atributos.Add("version", DEFAULT_VERSION);
 	      atributos.Add("serie", serie);
 	      atributos.Add("folio", folio);
-	      atributos.Add("fecha", Comprobante.FechaISO8601(fecha));
+	      atributos.Add("fecha", Conversiones.DateTimeFechaISO8601(fecha));
 	      atributos.Add("sello", sello);
 	      atributos.Add("formaDePago", formaDePago);
 	      atributos.Add("noCertificado", noCertificado);
@@ -287,7 +298,7 @@ namespace IsaRoGaMX.CFDI
 	   public DateTime FechaDateTime {
 	      get {
 	         if(atributos.ContainsKey("fecha"))
-	            return DateTime.Parse(atributos["fecha"],  null, System.Globalization.DateTimeStyles.RoundtripKind);
+	            return Conversiones.FechaISO8601DateTime(atributos["fecha"]);
 	         throw new Exception("Comprobante::fecha. No puede estar vacio");
 	      }
 	      set {
@@ -563,14 +574,14 @@ namespace IsaRoGaMX.CFDI
 	   public DateTime FechaFolioFiscalOrigDateTime {
 	      get {
 	         if(atributos.ContainsKey("FechaFolioFiscalOrig"))
-	            return DateTime.Parse(atributos["FechaFolioFiscalOrig"],  null, System.Globalization.DateTimeStyles.RoundtripKind);
+	            return Conversiones.FechaISO8601DateTime(atributos["FechaFolioFiscalOrig"]);
 	         return DateTime.MinValue;
 	      }
 	      set {
 	         if(atributos.ContainsKey("FechaFolioFiscalOrig"))
-	            atributos["FechaFolioFiscalOrig"] = Comprobante.FechaISO8601(value);
+	            atributos["FechaFolioFiscalOrig"] = Conversiones.DateTimeFechaISO8601(value);
 	         else
-	            atributos.Add("FechaFolioFiscalOrig", Comprobante.FechaISO8601(value));
+	            atributos.Add("FechaFolioFiscalOrig", Conversiones.DateTimeFechaISO8601(value));
 	      }
 	   }
 	   
@@ -591,6 +602,14 @@ namespace IsaRoGaMX.CFDI
 	   
 	   public string CadenaOriginal {
 	      get { return cadenaOriginal; }
+	   }
+	   
+	   public Nomina Nomina {
+	      get {
+	         if(nomina >= 0)
+	            return (Nomina)complementos[nomina];
+	         return null;
+	      }
 	   }
 	   
       public override XmlElement NodoXML(string prefijo, string namespaceURI, XmlDocument documento)
@@ -651,10 +670,6 @@ namespace IsaRoGaMX.CFDI
          //Resultado
          return sw.ToString();
             
-      }
-      
-      public static string FechaISO8601(DateTime fecha) {
-         return fecha.ToString("yyyy-MM-ddTHH:mm:ss");
       }
 	}
 }

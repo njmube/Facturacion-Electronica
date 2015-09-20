@@ -53,6 +53,7 @@
     <Compile Include="CFDI\Comprobante.cs" />
     <Compile Include="CFDI\Conceptos.cs" />
     <Compile Include="CFDI\Contribuyentes.cs" />
+    <Compile Include="CFDI\Conversiones.cs" />
     <Compile Include="CFDI\CuentaPredial.cs" />
     <Compile Include="CFDI\Impuestos.cs" />
     <Compile Include="CFDI\InformacionAduanera.cs" />
