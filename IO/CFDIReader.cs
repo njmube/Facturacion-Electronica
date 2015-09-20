@@ -120,47 +120,6 @@ namespace IsaRoGaMX.IO
                timbre.atributos = leerAtributos(padre);
                cfdi.AgregarComplemento(timbre);
                break;
-            case "Nomina":
-               Nomina nomina = new Nomina();
-               nomina.atributos = leerAtributos(padre);
-               cfdi.AgregarComplemento(nomina);
-               break;
-            case "Percepciones":
-               Percepciones percepciones = new Percepciones();
-               percepciones.atributos = leerAtributos(padre);
-               cfdi.Nomina.Percepciones = percepciones;
-               break;
-            case "Percepcion":
-               Percepcion percepcion = new Percepcion();
-               percepcion.atributos = leerAtributos(padre);
-               cfdi.Nomina.Percepciones.Agregar(percepcion);
-               break;
-            case "Deducciones":
-               Deducciones deducciones = new Deducciones();
-               deducciones.atributos = leerAtributos(padre);
-               cfdi.Nomina.Deducciones = deducciones;
-               break;
-            case "Deduccion":
-               Deduccion deduccion = new Deduccion();
-               deduccion.atributos = leerAtributos(padre);
-               cfdi.Nomina.Deducciones.Agregar(deduccion);
-               break;
-            case "Incapacidades":
-               cfdi.Nomina.Incapacidades = new Incapacidades();
-               break;
-            case "Incapacidad":
-               Incapacidad incapacidad = new Incapacidad();
-               incapacidad.atributos = leerAtributos(padre);
-               cfdi.Nomina.Incapacidades.Agregar(incapacidad);
-               break;
-            case "HorasExtras":
-               cfdi.Nomina.HorasExtras = new HorasExtras();
-               break;
-            case "HorasExtra":
-               HorasExtra horasExtra = new HorasExtra();
-               horasExtra.atributos = leerAtributos(padre);
-               cfdi.Nomina.HorasExtras.Agregar(horasExtra);
-               break;
          }
          
          // Procesamos los nodos hijos
