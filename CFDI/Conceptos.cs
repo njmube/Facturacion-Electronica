@@ -207,9 +207,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("cantidad"))
-               atributos["cantidad"] = value.ToString("#.000000");
+               atributos["cantidad"] = Conversiones.Importe(value);
             else
-               atributos.Add("cantidad", value.ToString("#.000000"));
+               atributos.Add("cantidad", Conversiones.Importe(value));
          }
       }
       
@@ -279,9 +279,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("valorUnitario"))
-               atributos["valorUnitario"] = value.ToString("#.000000");
+               atributos["valorUnitario"] = Conversiones.Importe(value);
             else
-               atributos.Add("valorUnitario", value.ToString("#.000000"));
+               atributos.Add("valorUnitario", Conversiones.Importe(value));
          }
       }
       
@@ -297,9 +297,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("importe"))
-               atributos["importe"] = value.ToString("#.000000");
+               atributos["importe"] = Conversiones.Importe(value);
             else
-               atributos.Add("importe", value.ToString("#.000000"));
+               atributos.Add("importe", Conversiones.Importe(value));
          }
       }
    }

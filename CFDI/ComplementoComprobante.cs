@@ -16,6 +16,7 @@ namespace IsaRoGaMX.CFDI
    #region Timbre Fiscal Digital
    
    public class TimbreFiscalDigital : ComplementoComprobante {
+      internal static string nspace = "http://www.sat.gob.mx/TimbreFiscalDigital";
       public TimbreFiscalDigital() :base() { }
       
       public TimbreFiscalDigital(string version, string uuid, DateTime fechaTimbrado, string selloCFD, string noCertificadoSAT, string selloSAT) {
@@ -119,7 +120,7 @@ namespace IsaRoGaMX.CFDI
    #region Percepciones
    
    public class Percepciones : baseObject {
-      List<Percepcion> percepciones;
+      readonly List<Percepcion> percepciones;
       
       public Percepciones() : base() {
          percepciones = new List<Percepcion>();
@@ -246,9 +247,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("ImporteGravado"))
-               atributos["ImporteGravado"] = value.ToString("#.000000");
+               atributos["ImporteGravado"] = Conversiones.Importe(value);
             else
-               atributos.Add("ImporteGravado", value.ToString("#.000000"));
+               atributos.Add("ImporteGravado", Conversiones.Importe(value));
          }
       }
       
@@ -260,9 +261,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("ImporteExento"))
-               atributos["ImporteExento"] = value.ToString("#.000000");
+               atributos["ImporteExento"] = Conversiones.Importe(value);
             else
-               atributos.Add("ImporteExento", value.ToString("#.000000"));
+               atributos.Add("ImporteExento", Conversiones.Importe(value));
          }
       }
    }
@@ -272,7 +273,7 @@ namespace IsaRoGaMX.CFDI
    #region Deducciones
    
    public class Deducciones : baseObject {
-      List<Deduccion> deducciones;
+      readonly List<Deduccion> deducciones;
       
       public Deducciones() : base() {
          deducciones = new List<Deduccion>();
@@ -399,9 +400,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("ImporteGravado"))
-               atributos["ImporteGravado"] = value.ToString("#.000000");
+               atributos["ImporteGravado"] = Conversiones.Importe(value);
             else
-               atributos.Add("ImporteGravado", value.ToString("#.000000"));
+               atributos.Add("ImporteGravado", Conversiones.Importe(value));
          }
       }
       
@@ -413,9 +414,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("ImporteExento"))
-               atributos["ImporteExento"] = value.ToString("#.000000");
+               atributos["ImporteExento"] = Conversiones.Importe(value);
             else
-               atributos.Add("ImporteExento", value.ToString("#.000000"));
+               atributos.Add("ImporteExento", Conversiones.Importe(value));
          }
       }
    }
@@ -613,6 +614,7 @@ namespace IsaRoGaMX.CFDI
    #endregion
    
    public class Nomina : ComplementoComprobante {
+      internal static string nspace = "http://www.sat.gob.mx/nomina";
       Percepciones percepciones;
       Deducciones deducciones;
       Incapacidades incapacidades;
@@ -1008,4 +1010,406 @@ namespace IsaRoGaMX.CFDI
    }
    
    #endregion
+   
+   
+   #region Estado De Cuenta Combustible
+   
+   #region ConceptoEstadoDeCuentaCombustible
+   
+   public class ConceptoEstadoDeCuenta : baseObject {
+      internal TrasladosConceptosEstadoDeCuentaCombustible traslados = new TrasladosConceptosEstadoDeCuentaCombustible();
+      
+      public ConceptoEstadoDeCuenta() : base() { }
+      
+      public ConceptoEstadoDeCuenta(string identificador, DateTime fecha, string rfc, string claveEstacion, double cantidad, string nombreCombustible, string folioOperacion, double valorUnitario, double importe)
+         : base() {
+         atributos.Add("identificador", identificador);
+         atributos.Add("fecha", Conversiones.DateTimeFechaISO8601(fecha));
+         atributos.Add("rfc", rfc);
+         atributos.Add("claveEstacion", claveEstacion);
+         atributos.Add("cantidad", Conversiones.Importe(cantidad));
+         atributos.Add("nombreCombustible", nombreCombustible);
+         atributos.Add("folioOperacion", folioOperacion);
+         atributos.Add("valorUnitario", Conversiones.Importe(valorUnitario));
+         atributos.Add("importe", Conversiones.Importe(importe));
+      }
+      
+      public void AgregaTraslado(TrasladoEstadoDeCuentaCombustible traslado) {
+         traslados.Agregar(traslado);
+      }
+      
+      public string Identificador {
+         get {
+            if(atributos.ContainsKey("identificador"))
+               return atributos["identificador"];
+            throw new Exception("ConceptoEstadoDeCuenta::identificador. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("identificador"))
+               atributos["identificador"] = value;
+            else
+               atributos.Add("identificador", value);
+         }
+      }
+      
+      public string FechaString {
+         get {
+            if(atributos.ContainsKey("fecha"))
+               return atributos["fecha"];
+            throw new Exception("ConceptoEstadoDeCuentaCombustible::fecha. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("fecha")) {
+               try {
+                  Conversiones.FechaISO8601DateTime(value);
+                  atributos.Add("fecha", value);
+               }
+               catch(Exception) {
+                  throw new Exception("ConceptoEstadoDeCuenta::fecha. No puede estar vacio");
+               }
+            }
+         }
+      }
+      
+      public DateTime FechaDateTime {
+         get {
+            if(atributos.ContainsKey("fecha"))
+               return Conversiones.FechaISO8601DateTime(atributos["fecha"]);
+            throw new Exception("ConceptoEstadoDeCuentaCombustible::fecha. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("fecha"))
+               atributos["fecha"] = Conversiones.DateTimeFechaISO8601(value);
+            else
+               atributos.Add("fecha", Conversiones.DateTimeFechaISO8601(value));
+         }
+      }
+      
+      public string RFC {
+         get {
+            if(atributos.ContainsKey("rfc"))
+               return atributos["rfc"];
+            throw new Exception("ConceptoEstadoDeCuentaCombustible::rfc. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("rfc"))
+               atributos["rfc"] = value;
+            else
+               atributos.Add("rfc", value);
+         }
+      }
+      
+      public string ClaveEstacion {
+         get {
+            if(atributos.ContainsKey("claveEstacion"))
+               return atributos["claveEstacion"];
+            throw new Exception("ConceptoEstadoDeCuentaCombustible::claveEstacion. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("claveEstacion"))
+               atributos["claveEstacion"] = value;
+            else
+               atributos.Add("claveEstacion", value);
+         }
+      }
+      
+      public string NombreCombustible {
+         get {
+            if(atributos.ContainsKey("nombreCombustible"))
+               return atributos["nombreCombustible"];
+            throw new Exception("ConceptoEstadoDeCuentaCombustible::nombreCombustible. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("nombreCombustible"))
+               atributos["nombreCombustible"] = value;
+            else
+               atributos.Add("nombreCombustible", value);
+         }
+      }
+      
+      public string FolioOperacion {
+         get {
+            if(atributos.ContainsKey("folioOperacion"))
+               return atributos["folioOperacion"];
+            throw new Exception("ConceptoEstadoDeCuentaCombustible::folioOperacion. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("folioOperacion"))
+               atributos["folioOperacion"] = value;
+            else
+               atributos.Add("folioOperacion", value);
+         }
+      }
+      
+      public double ValorUnitario {
+         get {
+            if(atributos.ContainsKey("valorUnitario"))
+               return Convert.ToDouble(atributos["valorUnitario"]);
+            else
+               throw new Exception("Concepto::unidad no puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("valorUnitario"))
+               atributos["valorUnitario"] = Conversiones.Importe(value);
+            else
+               atributos.Add("valorUnitario", Conversiones.Importe(value));
+         }
+      }
+      
+      public double Importe {
+         get {
+            if(atributos.ContainsKey("importe"))
+               return Convert.ToDouble(atributos["importe"]);
+            else
+               throw new Exception("Concepto::importe no puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("importe"))
+               atributos["importe"] = Conversiones.Importe(value);
+            else
+               atributos.Add("importe", Conversiones.Importe(value));
+         }
+      }
+   }
+   
+   public class TrasladoEstadoDeCuentaCombustible : baseObject {
+      public TrasladoEstadoDeCuentaCombustible() : base() { }
+      
+      public TrasladoEstadoDeCuentaCombustible(string impuesto, double tasa, double importe)
+         : base() {
+         atributos.Add("impuesto", impuesto);
+         atributos.Add("tasa", Conversiones.Importe(tasa));
+         atributos.Add("importe", Conversiones.Importe(importe));
+      }
+      
+      public string Impuesto {
+         get {
+            if(atributos.ContainsKey("impuesto"))
+               return atributos["impuesto"];
+            else
+               throw new Exception("TrasladoEstadoDeCuentaCombustible::impuesto no puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("impuesto"))
+               atributos["impuesto"] = value;
+            else
+               atributos.Add("impuesto", value);
+         }
+      }
+      
+      public double Importe {
+         get {
+            if(atributos.ContainsKey("importe"))
+               return Convert.ToDouble(atributos["importe"]);
+            else
+               throw new Exception("TrasladoEstadoDeCuentaCombustible::importe no puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("importe"))
+               atributos["importe"] = Conversiones.Importe(value);
+            else
+               atributos.Add("importe", Conversiones.Importe(value));
+         }
+      }
+      
+      public double Tasa {
+         get {
+            if(atributos.ContainsKey("tasa"))
+               return Convert.ToDouble(atributos["tasa"]);
+            else
+               throw new Exception("TrasladoEstadoDeCuentaCombustible::tasa no puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("tasa"))
+               atributos["tasa"] = Conversiones.Importe(value);
+            else
+               atributos.Add("tasa", Conversiones.Importe(value));
+         }
+      }
+   }
+   
+   #endregion
+   
+   #region ConceptosEstadoDeCuentaCombustibles
+   
+   public class ConceptosEstadoDeCuentaCombustibles {
+      List<ConceptoEstadoDeCuenta> conceptos;
+      
+      /// <summary>
+      /// Crea una instancia de <see cref="Conceptos"/> vacia
+      /// </summary>
+      public ConceptosEstadoDeCuentaCombustibles() {
+         conceptos = new List<ConceptoEstadoDeCuenta>();
+      }
+      
+      /// <summary>
+      /// Devuelve el concepto en el indice extablecido
+      /// </summary>
+      public ConceptoEstadoDeCuenta this[int indice] {
+         get {
+            if(indice >= 0 && indice < conceptos.Count)
+               return conceptos[indice];
+            throw new Exception("ConceptosEstadoDeCuentaCombustibles::[indice]. Indice fuera de rango");
+         }
+      }
+      
+      /// <summary>
+      /// Agrega un concepto
+      /// </summary>
+      /// <param name="concepto">Concepto a agregar</param>
+      public void Agregar(ConceptoEstadoDeCuenta concepto) {
+         conceptos.Add(concepto);
+      }
+      
+      /// <summary>
+      /// Elimina un concepto
+      /// </summary>
+      /// <param name="indice">Indice del concepto a eliminar</param>
+      public void Eliminar(int indice) {
+         if(indice >= 0 && indice < conceptos.Count)
+            conceptos.RemoveAt(indice);
+         else
+            throw new Exception("ConceptosEstadoDeCuentaCombustibles::Eliminaconcepto. Indice fuera de rango");
+      }
+      
+      /// <summary>
+      /// Vacia la lista de conceptos actual
+      /// </summary>
+      public void Vaciar() {
+         conceptos = new List<ConceptoEstadoDeCuenta>();
+      }
+      
+      /// <summary>
+      /// Devuelve el número de conceptos en la lista
+      /// </summary>
+      public int Elementos {
+         get { return conceptos.Count; }
+      }
+   }
+   
+   #endregion
+   
+   public class TrasladosConceptosEstadoDeCuentaCombustible {
+      List<TrasladoEstadoDeCuentaCombustible> traslados;
+      
+      public TrasladosConceptosEstadoDeCuentaCombustible() {
+         traslados = new List<TrasladoEstadoDeCuentaCombustible>();
+      }
+      
+      public TrasladoEstadoDeCuentaCombustible this[int indice] {
+         get {
+            if(indice >= 0 && indice < traslados.Count)
+               return traslados[indice];
+            else
+               throw new Exception("TrasladosConceptosEstadoDeCuentaCombustible: Indice fuera de rango");
+         }
+      }
+      
+      public void Agregar(TrasladoEstadoDeCuentaCombustible traslado) {
+         traslados.Add(traslado);
+      }
+      
+      public void Elimina(int indice) {
+         traslados.RemoveAt(indice);
+      }
+      
+      public int Elementos {
+         get { return traslados.Count; }
+      }
+   }
+   
+   public class EstadoDeCuentaCombustible : ComplementoComprobante {
+      internal static string nspace = "http://www.sat.gob.mx/ecc";
+      internal ConceptosEstadoDeCuentaCombustibles conceptos = new ConceptosEstadoDeCuentaCombustibles();
+      
+      public EstadoDeCuentaCombustible() : base () { }
+      
+      public EstadoDeCuentaCombustible(string tipoOperacion, string numeroDeCuenta, double total)
+         : base() {
+         atributos.Add("tipoOperacion", tipoOperacion);
+         atributos.Add("numeroDeCuenta", numeroDeCuenta);
+         atributos.Add("total", Conversiones.Importe(total));
+      }
+      
+      public EstadoDeCuentaCombustible(string tipoOperacion, string numeroDeCuenta, double subTotal, double total)
+         : base() {
+         atributos.Add("tipoOperacion", tipoOperacion);
+         atributos.Add("numeroDeCuenta", numeroDeCuenta);
+         atributos.Add("subTotal", Conversiones.Importe(subTotal));
+         atributos.Add("total", Conversiones.Importe(total));
+      }
+      
+      public ConceptoEstadoDeCuenta this[int indice] {
+         get {
+            if(indice >= 0 && indice < conceptos.Elementos)
+               return conceptos[indice];
+            throw new Exception("EstadoDeCuentaCombustible::[indice]. Indice fuera de rango");
+         }
+      }
+      
+      public void Agregar(ConceptoEstadoDeCuenta concepto) {
+         conceptos.Agregar(concepto);
+      }
+      
+      public string TipoOperacion {
+         get {
+            if(atributos.ContainsKey("tipoOperacion"))
+               return atributos["tipoOperacion"];
+            throw new Exception("EstadoDeCuentaCombustible::tipoOperacion. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("tipoOperacion"))
+               atributos["tipoOperacion"] = value;
+            else
+               atributos.Add("tipoOperacion", value);
+         }
+      }
+      
+      public string NumeroDeCuenta {
+         get {
+            if(atributos.ContainsKey("numeroDeCuenta"))
+               return atributos["numeroDeCuenta"];
+            throw new Exception("EstadoDeCuentaCombustible::numeroDeCuenta. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("numeroDeCuenta"))
+               atributos["numeroDeCuenta"] = value;
+            else
+               atributos.Add("numeroDeCuenta", value);
+         }
+      }
+      
+      public double SubTotal {
+         get {
+            if(atributos.ContainsKey("subTotal"))
+               return Convert.ToDouble(atributos["subTotal"]);
+            else
+               return 0.0;
+         }
+         set {
+            if(atributos.ContainsKey("subTotal"))
+               atributos["subTotal"] = Conversiones.Importe(value);
+            else
+               atributos.Add("subTotal", Conversiones.Importe(value));
+         }
+      }
+      
+      public double Total {
+         get {
+            if(atributos.ContainsKey("total"))
+               return Convert.ToDouble(atributos["total"]);
+            throw new Exception("EstadoDeCuentaCombustible::total. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("total"))
+               atributos["total"] = Conversiones.Importe(value);
+            else
+               atributos.Add("total", Conversiones.Importe(value));
+         }
+      }
+   }
+   
+   #endregion
+   
+   
 }

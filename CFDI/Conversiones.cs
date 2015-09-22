@@ -26,5 +26,14 @@ namespace IsaRoGaMX
       public static DateTime FechaISO8601DateTime(string fecha) {
          return DateTime.Parse(fecha,  null, System.Globalization.DateTimeStyles.RoundtripKind);
       }
+      
+      /// <summary>
+      /// Convierte un valor doble en una cadena con seis digitos decimales
+      /// </summary>
+      /// <param name="importe">Importe a convertir</param>
+      /// <returns></returns>
+      public static string Importe(double importe) {
+         return importe.ToString("#.000000");
+      }
    }
 }

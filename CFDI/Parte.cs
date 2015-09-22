@@ -38,9 +38,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("cantidad"))
-               atributos["cantidad"] = value.ToString("#.000000");
+               atributos["cantidad"] = Conversiones.Importe(value);
             else
-               atributos.Add("cantidad", value.ToString("#.000000"));
+               atributos.Add("cantidad", Conversiones.Importe(value));
          }
       }
       

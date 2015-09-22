@@ -42,9 +42,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("importe"))
-               atributos["importe"] = value.ToString("#.000000");
+               atributos["importe"] = Conversiones.Importe(value);
             else
-               atributos.Add("importe", value.ToString("#.000000"));
+               atributos.Add("importe", Conversiones.Importe(value));
          }
       }
    }
@@ -82,9 +82,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("importe"))
-               atributos["importe"] = value.ToString("#.000000");
+               atributos["importe"] = Conversiones.Importe(value);
             else
-               atributos.Add("importe", value.ToString("#.000000"));
+               atributos.Add("importe", Conversiones.Importe(value));
          }
       }
       
@@ -97,9 +97,9 @@ namespace IsaRoGaMX.CFDI
          }
          set {
             if(atributos.ContainsKey("tasa"))
-               atributos["tasa"] = value.ToString("#.000000");
+               atributos["tasa"] = Conversiones.Importe(value);
             else
-               atributos.Add("tasa", value.ToString("#.000000"));
+               atributos.Add("tasa", Conversiones.Importe(value));
          }
       }
    }

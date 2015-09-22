@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CFDI\Addenda.cs" />
     <Compile Include="CFDI\baseObject.cs" />
     <Compile Include="CFDI\ComplementoComprobante.cs" />
     <Compile Include="CFDI\ComplementoConcepto.cs" />

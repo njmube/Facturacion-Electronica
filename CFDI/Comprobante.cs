@@ -16,12 +16,14 @@ namespace IsaRoGaMX.CFDI
    public enum TipoDeComprobante { INGRESO, EGRESO, TRASLADO }
    
    public class Comprobante : baseObject {
+      internal static string nspace = "http://www.sat.gob.mx/cfd/3";
 	   Emisor emisor;
 	   Receptor receptor;
 	   Conceptos conceptos = new Conceptos();
 	   Impuestos impuestos = new Impuestos();
 	   string cadenaOriginal = string.Empty;
-	   List<ComplementoComprobante> complementos;
+	   internal List<ComplementoComprobante> complementos;
+	   Adenda addenda;
 	   XmlDocument documento;
 	   const string DEFAULT_VERSION = "3.2";
 	   internal static int decimales = 2;
@@ -29,12 +31,40 @@ namespace IsaRoGaMX.CFDI
 	   internal int nomina = -1;
 	   internal int timbreFiscal = -1;
 	   internal int iedu = -1;
+	   internal int combustible = -1;
 	   
 	   public static void Decimales(int digitos) {
 	      if(digitos > 0 && digitos < 7)
 	         Comprobante.decimales = digitos;
 	      else
 	         throw new Exception("El t_Importe para el CFDI 3.2 especifica que debe namejar un máximo de 6 digitos");
+	   }
+	   
+	   public EstadoDeCuentaCombustible EstadoDeCuentaCombustible {
+	      get {
+	         if(combustible < 0)
+	            throw new Exception("Este comprobante no presenta ningún complemento EstadoDeCuentaCombustible");
+	         return (EstadoDeCuentaCombustible)complementos[combustible];
+	      }
+	      set { AgregarComplemento(value); }
+	   }
+	   
+	   public TimbreFiscalDigital TimbreFiscal {
+	      get {
+	         if(timbreFiscal < 0)
+	            throw new Exception("Este comprobante no presenta ningún complemento TimbreFiscalDigital");
+	         return (TimbreFiscalDigital)complementos[timbreFiscal];
+	      }
+	      set { AgregarComplemento(value); }
+	   }
+	   
+	   public Nomina Nomina {
+	      get {
+	         if(nomina < 0)
+	            throw new Exception("Este comprobante no presenta ningún complemento Nómina");
+	         return (Nomina)complementos[nomina];
+	      }
+	      set { AgregarComplemento(value); }
 	   }
 	   
 	   public void AgregarComplemento(ComplementoComprobante complemento) {
@@ -47,6 +77,9 @@ namespace IsaRoGaMX.CFDI
 	            break;
 	         case "Nomina":
 	            nomina = complementos.Count -1;;
+	            break;
+	         case "EstadoDeCuentaCombustible":
+	            combustible = complementos.Count - 1;
 	            break;
 	      }
 	   }
@@ -107,6 +140,9 @@ namespace IsaRoGaMX.CFDI
 	      
 	      // Se agrega el comprobante al documetno
 	      documento.AppendChild(comprobante);
+	      
+	      //TODO Agregar el nodo de Complementos
+	      //TODO Agregar el nodo de Addenda
 	      
 	      // Regreso el documento XML
 	      return documento;
@@ -389,9 +425,9 @@ namespace IsaRoGaMX.CFDI
 	      }
 	      set {
 	         if(atributos.ContainsKey("subTotal"))
-	            atributos["subTotal"] = value.ToString("#.000000");
+	            atributos["subTotal"] = Conversiones.Importe(value);
 	         else
-	            atributos.Add("subTotal", value.ToString("#.000000"));
+	            atributos.Add("subTotal", Conversiones.Importe(value));
 	      }
 	   }
 	   
@@ -403,9 +439,9 @@ namespace IsaRoGaMX.CFDI
 	      }
 	      set {
 	         if(atributos.ContainsKey("descuento"))
-	            atributos["descuento"] = value.ToString("#.000000");
+	            atributos["descuento"] = Conversiones.Importe(value);
 	         else
-	            atributos.Add("descuento", value.ToString("#.000000"));
+	            atributos.Add("descuento", Conversiones.Importe(value));
 	      }
 	   }
 	   
@@ -462,9 +498,9 @@ namespace IsaRoGaMX.CFDI
 	      }
 	      set {
 	         if(atributos.ContainsKey("total"))
-	            atributos["total"] = value.ToString("#.000000");
+	            atributos["total"] = Conversiones.Importe(value);
 	         else
-	            atributos.Add("total", value.ToString("#.000000"));
+	            atributos.Add("total", Conversiones.Importe(value));
 	      }
 	   }
 	   
@@ -594,22 +630,14 @@ namespace IsaRoGaMX.CFDI
 	      }
 	      set {
 	         if(atributos.ContainsKey("MontoFolioFiscalOrig"))
-	            atributos["MontoFolioFiscalOrig"] = value.ToString("#.000000");
+	            atributos["MontoFolioFiscalOrig"] = Conversiones.Importe(value);
 	         else
-	            atributos.Add("MontoFolioFiscalOrig", value.ToString("#.000000"));
+	            atributos.Add("MontoFolioFiscalOrig", Conversiones.Importe(value));
 	      }
 	   }
 	   
 	   public string CadenaOriginal {
 	      get { return cadenaOriginal; }
-	   }
-	   
-	   public Nomina Nomina {
-	      get {
-	         if(nomina >= 0)
-	            return (Nomina)complementos[nomina];
-	         return null;
-	      }
 	   }
 	   
       public override XmlElement NodoXML(string prefijo, string namespaceURI, XmlDocument documento)
