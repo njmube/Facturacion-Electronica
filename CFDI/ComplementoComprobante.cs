@@ -9,17 +9,109 @@ using System;
 using System.Collections.Generic;
 
 namespace IsaRoGaMX.CFDI
-{
+{   
+   /// <summary>
+   /// Clase base para los Complementos del CFDI
+   /// </summary>
    public abstract class ComplementoComprobante : baseObject
-   { }
+   {
+      /// <summary>
+      /// Define el namespace del complemento
+      /// </summary>
+      internal string nspace;
+      
+      protected ComplementoComprobante(string nspace) {
+         this.nspace = nspace;
+      }
+   }
+   
+   #region Nodo Complemento
+   
+   /// <summary>
+   /// Clase encargada de agregar, eliminar y extraer complementos de un comprobante fiscal 
+   /// </summary>
+   public class Complemento : baseObject {
+      readonly Dictionary<string, ComplementoComprobante> complementos;
+      
+      /// <summary>
+      /// Crea una instancia de <see cref="Complemento"/>
+      /// </summary>
+      public Complemento()
+      {
+         complementos = new Dictionary<string, ComplementoComprobante>();
+      }
+      
+      public ComplementoComprobante this[int indice] {
+         get {
+            if(indice >= 0 && indice < complementos.Count) {
+               var aux = new ComplementoComprobante[complementos.Count];
+               complementos.Values.CopyTo(aux, 0);
+               return aux[indice];
+            }
+            throw new Exception("ComplementosConcepto::this[indice]. Indice fuera de rango");
+         }
+      }
+      
+      /// <summary>
+      /// Agrega un complemento
+      /// </summary>
+      /// <param name="complemento">Complemento a agregar</param>
+      public void Agregar(ComplementoComprobante complemento) {
+         if(complementos.ContainsKey(complemento.GetType().Name))
+            throw new Exception("Ya se ha agregado un complemento del tipo: " + complemento.GetType().Name);
+         complementos.Add(complemento.GetType().Name, complemento);         
+      }
+      
+      /// <summary>
+      /// Elimina un complemento en el indice especificado
+      /// </summary>
+      /// <param name="indice">Indice del complemento a eliminar</param>
+      public void Eliminar(int indice) {
+         if(indice >= 0 && indice < complementos.Count) {
+            var keys = new string[complementos.Count];
+            complementos.Keys.CopyTo(keys, 0);
+            complementos.Remove(keys[indice]);
+         }
+         throw new Exception("ComplementosConcepto::Eliminar(). Indice fuera de rango");
+      }
+      
+      /// <summary>
+      /// Devuelve un arreglo de complementos de CFDI
+      /// </summary>
+      public ComplementoComprobante[] Complementos {
+         get {
+            ComplementoComprobante[] aux = new ComplementoComprobante[complementos.Count];
+            complementos.Values.CopyTo(aux, 0);
+            return aux;
+         }
+      }
+      
+      public int Elementos {
+         get { return complementos.Count; }
+      }
+      
+      /// <summary>
+      /// Devuelve un string[] con los tipos de complementos actuales
+      /// </summary>
+      public string[] TiposComplemento {
+         get {
+            List<string> tipos = new List<string>();
+            foreach(string tipo in complementos.Keys)
+               tipos.Add(tipo);
+            return tipos.ToArray();
+         }
+      }
+   }
+   
+   #endregion
    
    #region Timbre Fiscal Digital
    
    public class TimbreFiscalDigital : ComplementoComprobante {
-      internal static string nspace = "http://www.sat.gob.mx/TimbreFiscalDigital";
-      public TimbreFiscalDigital() :base() { }
+      public TimbreFiscalDigital() :base("http://www.sat.gob.mx/TimbreFiscalDigital") { }
       
-      public TimbreFiscalDigital(string version, string uuid, DateTime fechaTimbrado, string selloCFD, string noCertificadoSAT, string selloSAT) {
+      public TimbreFiscalDigital(string version, string uuid, DateTime fechaTimbrado, string selloCFD, string noCertificadoSAT, string selloSAT) 
+         : base("http://www.sat.gob.mx/TimbreFiscalDigital") {
          atributos.Add("version", version);
          atributos.Add("UUID", uuid);
          atributos.Add("FechaTimbrado", Conversiones.DateTimeFechaISO8601(fechaTimbrado));
@@ -114,6 +206,552 @@ namespace IsaRoGaMX.CFDI
    }
    
    #endregion
+   
+   #region Donatorias
+   
+   /// <summary>
+   /// Nodo opcional para incluir la información requerida por el Servicio de Administración Tributaria a las organizaciones civiles o fideicomisos autorizados para recibir donativos, que permite hacer deducibles los Comprobantes Fiscales Digitales (CFD) y Comprobantes Fiscales Digitales a través de Internet (CFDI) a los donantes.
+   /// </summary>
+   public class Donatorias : ComplementoComprobante {
+      public Donatorias() : base ("http://www.sat.gob.mx/TimbreFiscalDigital") { }
+      
+      public Donatorias(string version, string noAutorizacion, DateTime fechaAutorizacion, string leyenda) 
+         : base("http://www.sat.gob.mx/TimbreFiscalDigital") {
+         atributos.Add("version", version);
+         atributos.Add("noAutorizacion", noAutorizacion);
+         atributos.Add("fechaAutorizacion", Conversiones.DateTimeFechaISO8601(fechaAutorizacion));
+         atributos.Add("leyenda", leyenda);
+      }
+      
+      /// <summary>
+      /// Atributo requerido para expresar la versión del complemento de donatarias
+      /// </summary>
+      public string Version {
+         get {
+            if(atributos.ContainsKey("version"))
+               return atributos["version"];
+            throw new Exception("Donatorias::Version. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("version"))
+               atributos["version"] = value;
+            else
+               atributos.Add("version", value);
+         }
+      }
+      
+      /// <summary>
+      /// Atributo requerido para expresar el número del oficio en que se haya informado a la organización civil o fideicomiso, la procedencia de la autorización para recibir donativos deducibles, o su renovación correspondiente otorgada por el Servicio de Administración Tributaria.
+      /// </summary>
+      public string NoAutorizacion {
+         get {
+            if(atributos.ContainsKey("noAutorizacion"))
+               return atributos["noAutorizacion"];
+            throw new Exception("Donatorias::NoAutorizacion. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("noAutorizacion"))
+               atributos["noAutorizacion"] = value;
+            else
+               atributos.Add("noAutorizacion", value);
+         }
+      }
+      
+      /// <summary>
+      /// Atributo requerido para expresar la fecha del oficio en que se haya informado a la organización civil o fideicomiso, la procedencia de la autorización para recibir donativos deducibles, o su renovación correspondiente otorgada por el Servicio de Administración Tributaria.
+      /// </summary>
+      public string FechaAutorizacionString {
+         get {
+            if(atributos.ContainsKey("fechaAutorizacion"))
+               return atributos["fechaAutorizacion"];
+            throw new Exception("Donatorias::FechaAutorizacion. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("fechaAutorizacion"))
+               atributos["fechaAutorizacion"] = value;
+            else
+               atributos.Add("fechaAutorizacion", value);
+         }
+      }
+      
+      /// <summary>
+      /// Atributo requerido para expresar la fecha del oficio en que se haya informado a la organización civil o fideicomiso, la procedencia de la autorización para recibir donativos deducibles, o su renovación correspondiente otorgada por el Servicio de Administración Tributaria.
+      /// </summary>
+      public DateTime FechaAutorizacionDateTime {
+         get {
+            if(atributos.ContainsKey("fechaAutorizacion"))
+               return Conversiones.FechaISO8601DateTime(atributos["fechaAutorizacion"]);
+            throw new Exception("Donatorias::FechaAutorizacion. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("fechaAutorizacion"))
+               atributos["fechaAutorizacion"] = Conversiones.DateTimeFechaISO8601(value);
+            else
+               atributos.Add("fechaAutorizacion", Conversiones.DateTimeFechaISO8601(value));
+         }
+      }
+      
+      /// <summary>
+      /// Atributo requerido para señalar de manera expresa que el comprobante que se expide se deriva de un donativo.
+      /// </summary>
+      public string Leyenda {
+         get {
+            if(atributos.ContainsKey("leyenda"))
+               return atributos["leyenda"];
+            throw new Exception("Donatorias::Leyenda. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("leyenda"))
+               atributos["leyenda"] = value;
+            else
+               atributos.Add("leyenda", value);
+         }
+      }
+   }
+   
+   #endregion
+   
+   #region Compra y Ventas de Divisas
+   
+   /// <summary>
+   /// Complemento al CFDI para identificar las operaciones de compra y venta de divisas que realizan los centros cambiarios y las casa de cambio; haciendo mención expresa de que los comprobantes se expiden por la “compra”, o bien, por la “venta” de divisas.
+   /// </summary>
+   public class Divisas : ComplementoComprobante {
+      public Divisas() : base("http://www.sat.gob.mx/divisas") { }
+      
+      /// <summary>
+      /// Crea una instancia de la clase <see cref="Divisas"/>
+      /// </summary>
+      /// <param name="version">Versión del complemento de divisas</param>
+      /// <param name="tipoOperacion">Tipo de operación realizada.</param>
+      public Divisas(string version, string tipoOperacion)
+         : base("http://www.sat.gob.mx/divisas") {
+         atributos.Add("version", version);
+         atributos.Add("tipoOperacion", tipoOperacion);
+      }
+      
+      public string Version {
+         get {
+            if(atributos.ContainsKey("version"))
+               return atributos["version"];
+            throw new Exception("Divisas::Version. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("version"))
+               atributos["version"] = value;
+            else
+               atributos.Add("version", value);
+         }
+      }
+      
+      public string TipoOperacion {
+         get {
+            if(atributos.ContainsKey("tipoOperacion"))
+               return atributos["tipoOperacion"];
+            throw new Exception("Divisas::TipoOperacion. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("tipoOperacion"))
+               atributos["tipoOperacion"] = value;
+            else
+               atributos.Add("tipoOperacion", value);
+         }
+      }
+   }
+   
+   #endregion
+   
+   #region Impuestos Locales
+   
+   #region Retenciones Locales
+   
+   /// <summary>
+   /// Nodo opcional para la expresión de los impuestos locales retenidos
+   /// </summary>
+   public class RetencionLocal : baseObject {
+      public RetencionLocal() : base() { }
+      
+      public RetencionLocal(string impLocRetenido, double tasaDeRetencion, double importe)
+         : base() {
+         atributos.Add("ImpLocalRetenido", impLocRetenido);
+         atributos.Add("TasadeRetencion", Conversiones.Importe(tasaDeRetencion));
+         atributos.Add("Importe", Conversiones.Importe(importe));
+      }
+      
+      /// <summary>
+      /// Nombre del impuesto local retenido
+      /// </summary>
+      public string ImpLocalRetenido {
+         get {
+            if(atributos.ContainsKey("ImpLocalRetenido"))
+               return atributos["ImpLocalRetenido"];
+            throw new Exception("RetencionesLocales::ImpLocalRetenido. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("ImpLocalRetenido"))
+               atributos["ImpLocalRetenido"] = value;
+            else
+               atributos.Add("ImpLocalRetenido", value);
+         }
+      }
+      
+      /// <summary>
+      /// Porcentaje de retención del impuesto local
+      /// </summary>
+      public double TasaDeRetencion {
+         get {
+            if(atributos.ContainsKey("TasadeRetencion"))
+               return Convert.ToDouble(atributos["TasadeRetencion"]);
+            throw new Exception("RetencionesLocales::TasaDeRetencion. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("TasadeRetencion"))
+               atributos["TasadeRetencion"] = Conversiones.Importe(value);
+            else
+               atributos.Add("TasadeRetencion", Conversiones.Importe(value));
+         }
+      }
+      
+      /// <summary>
+      /// Monto del impuesto local retenido
+      /// </summary>
+      public double Importe {
+         get {
+            if(atributos.ContainsKey("Importe"))
+               return Convert.ToDouble(atributos["Importe"]);
+            throw new Exception("RetencionesLocales::Importe. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("Importe"))
+               atributos["Importe"] = Conversiones.Importe(value);
+            else
+               atributos.Add("Importe", Conversiones.Importe(value));
+         }
+      }
+   }
+   
+   public class RetencionesLocales {
+      readonly List<RetencionLocal> retenciones = new List<RetencionLocal>();
+      
+      public RetencionesLocales() { }
+      
+      public void Agregar(RetencionLocal retencion) {
+         retenciones.Add(retencion);
+      }
+      
+      public void Eliminar(int indice) {
+         if(indice >= 0 && indice < retenciones.Count)
+            retenciones.RemoveAt(indice);
+         throw new Exception("RetencionesLocales::Eliminar. Indice fuera de rango.");
+      }
+      
+      public RetencionLocal this[int indice] {
+         get {
+            if(indice >= 0 && indice < retenciones.Count)
+               return retenciones[indice];
+            throw new Exception("RetencionesLocales::[]. Indice fuera de rango.");
+         }
+      }
+      
+      public int Elementos {
+         get { return retenciones.Count; }
+      }
+   }
+   #endregion
+   
+   #region Traslados Locales
+   /// <summary>
+   /// Nodo opcional para la expresión de los impuestos locales trasladados
+   /// </summary>
+   public class TrasladoLocal : baseObject {
+      public TrasladoLocal() : base() { }
+      
+      public TrasladoLocal(string impLocTraslado, double tasaDeRetencion, double importe)
+         : base() {
+         atributos.Add("ImpLocalTraslado", impLocTraslado);
+         atributos.Add("TasadeTraslado", Conversiones.Importe(tasaDeRetencion));
+         atributos.Add("Importe", Conversiones.Importe(importe));
+      }
+      
+      /// <summary>
+      /// Nombre del impuesto local trasladado
+      /// </summary>
+      public string ImpLocalTraslado {
+         get {
+            if(atributos.ContainsKey("ImpLocalTraslado"))
+               return atributos["ImpLocalTraslado"];
+            throw new Exception("TrasladosLocales::ImpLocalTraslado. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("ImpLocalTraslado"))
+               atributos["ImpLocalTraslado"] = value;
+            else
+               atributos.Add("ImpLocalTraslado", value);
+         }
+      }
+      
+      /// <summary>
+      /// Porcentaje de traslado del impuesto local
+      /// </summary>
+      public double TasaDeTraslado {
+         get {
+            if(atributos.ContainsKey("TasadeTraslado"))
+               return Convert.ToDouble(atributos["TasadeTraslado"]);
+            throw new Exception("TrasladosLocales::TasadeTraslado. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("TasadeTraslado"))
+               atributos["TasadeTraslado"] = Conversiones.Importe(value);
+            else
+               atributos.Add("TasadeTraslado", Conversiones.Importe(value));
+         }
+      }
+      
+      /// <summary>
+      /// Monto del impuesto local retenido
+      /// </summary>
+      public double Importe {
+         get {
+            if(atributos.ContainsKey("Importe"))
+               return Convert.ToDouble(atributos["Importe"]);
+            throw new Exception("TrasladosLocales::Importe. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("Importe"))
+               atributos["Importe"] = Conversiones.Importe(value);
+            else
+               atributos.Add("Importe", Conversiones.Importe(value));
+         }
+      }
+   }
+   
+   public class TrasladosLocales {
+      readonly List<TrasladoLocal> traslados = new List<TrasladoLocal>();
+      
+      public TrasladosLocales() { }
+      
+      public void Agregar(TrasladoLocal traslado) {
+         traslados.Add(traslado);
+      }
+      
+      public void Eliminar(int indice) {
+         if(indice >= 0 && indice < traslados.Count)
+            traslados.RemoveAt(indice);
+         throw new Exception("RetencionesLocales::Eliminar. Indice fuera de rango.");
+      }
+      
+      public TrasladoLocal this[int indice] {
+         get {
+            if(indice >= 0 && indice < traslados.Count)
+               return traslados[indice];
+            throw new Exception("RetencionesLocales::[]. Indice fuera de rango.");
+         }
+      }
+      
+      public int Elementos {
+         get { return traslados.Count; }
+      }
+   }
+   #endregion
+   
+   public class ImpuestosLocales : ComplementoComprobante {
+      RetencionesLocales retencionesLocales = new RetencionesLocales();
+      TrasladosLocales trasladosLocales = new TrasladosLocales();
+      
+      public ImpuestosLocales() : base("http://www.sat.gob.mx/implocal") { }
+      
+      public ImpuestosLocales(string version)
+         : base("http://www.sat.gob.mx/implocal") {
+         atributos.Add("version", version);
+      }
+      
+      public ImpuestosLocales(string version, double totalDeRetenciones, double totalDeTraslados)
+         : base ("http://www.sat.gob.mx/implocal") {
+         atributos.Add("version", version);
+         atributos.Add("TotaldeRetenciones", Conversiones.Importe(totalDeRetenciones));
+         atributos.Add("TotaldeTraslados", Conversiones.Importe(totalDeTraslados));
+      }
+      
+      public string Version {
+         get {
+            if(atributos.ContainsKey("version"))
+               return atributos["version"];
+            throw new Exception("ImpuestosLocales::Version. No puede estar vacio.");
+         }
+         set {
+            if(atributos.ContainsKey("version"))
+               atributos["version"] = value;
+            else
+               atributos.Add("version", value);
+         }
+      }
+      
+      public void AgregarRetencion(RetencionLocal retencion) {
+         retencionesLocales.Agregar(retencion);
+      }
+      
+      public void EliminaRetencion(int indice) {
+         if(indice >= 0 && indice < retencionesLocales.Elementos) {
+            retencionesLocales.Eliminar(indice);
+         }
+         throw new Exception("ImpuestosLocales::EliminaRetencion. Indice fuera de rango.");
+      }
+      
+      public void AgregarTraslado(TrasladoLocal traslado) {
+         trasladosLocales.Agregar(traslado);
+      }
+      
+      public void EliminarTraslado(int indice) {
+         if(indice >= 0 && indice < trasladosLocales.Elementos) {
+            trasladosLocales.Eliminar(indice);
+         }
+         throw new Exception("ImpuestosLocales::EliminaRetencion. Indice fuera de rango.");
+      }
+      
+      public RetencionesLocales Retenciones {
+         get { return retencionesLocales; }
+         set { retencionesLocales = value; }
+      }
+      
+      public TrasladosLocales Traslados {
+         get { return trasladosLocales; }
+         set { trasladosLocales = value; }
+      }
+      
+      public double TotalDeRetenciones {
+         get {
+            if(atributos.ContainsKey("TotaldeRetenciones"))
+               return Convert.ToDouble(atributos["TotaldeRetenciones"]);
+            else {
+               if(retencionesLocales.Elementos > 0) {
+                  double total = 0.0;
+                  for(int i = 0; i < retencionesLocales.Elementos; i++)
+                     total += retencionesLocales[i].Importe;
+                  return total;
+               }
+               return 0.0;
+            }
+         }
+         set {
+            if(atributos.ContainsKey("TotaldeRetenciones"))
+               atributos["TotaldeRetenciones"] = Conversiones.Importe(value);
+            else
+               atributos.Add("TotaldeRetenciones", Conversiones.Importe(value));
+         }
+      }
+      
+      public double TotalDeTraslados {
+         get {
+            if(atributos.ContainsKey("TotaldeTraslados"))
+               return Convert.ToDouble(atributos["TotaldeTraslados"]);
+            else {
+               if(trasladosLocales.Elementos > 0) {
+                  double total = 0.0;
+                  for(int i = 0; i < trasladosLocales.Elementos; i++)
+                     total += trasladosLocales[i].Importe;
+                  return total;
+               }
+               return 0.0;
+            }
+         }
+         set {
+            if(atributos.ContainsKey("TotaldeTraslados"))
+               atributos["TotaldeTraslados"] = Conversiones.Importe(value);
+            else
+               atributos.Add("TotaldeTraslados", Conversiones.Importe(value));
+         }
+      }
+   }
+   
+   #endregion
+   
+   #region Leyendas Fiscales
+   
+   public class Leyenda : baseObject {
+      public Leyenda() : base() { }
+      
+      public Leyenda(string textoLeyenda)
+         : base() {
+         atributos.Add("textoLeyenda", textoLeyenda);
+      }
+      
+      public Leyenda(string disposicionFiscal, string noma, string textoLeyenda)
+         : base() {
+         atributos.Add("disposicionFiscal", disposicionFiscal);
+         atributos.Add("noma", noma);
+         atributos.Add("textoLeyenda", textoLeyenda);
+      }
+      
+      public string DisposicionFiscal {
+         get {
+            return atributos.ContainsKey("disposicionFiscal") ? atributos["disposicionFiscal"] : string.Empty;
+         }
+         set {
+            if(atributos.ContainsKey("disposicionFiscal"))
+               atributos["disposicionFiscal"] = value;
+            else
+               atributos.Add("disposicionFiscal", value);
+         }
+      }
+      
+      public string Noma {
+         get {
+            return atributos.ContainsKey("noma") ? atributos["noma"] : string.Empty;
+         }
+         set {
+            if(atributos.ContainsKey("noma"))
+               atributos["noma"] = value;
+            else
+               atributos.Add("noma", value);
+         }
+      }
+      
+      public string TextoLeyenda {
+         get {
+            if(atributos.ContainsKey("textoLeyenda"))
+               return atributos["textoLeyenda"];
+            throw new Exception("Leyenda::TextoLeyenda. No puede estar vacio");
+         }
+         set {
+            if(atributos.ContainsKey("textoLeyenda"))
+               atributos["textoLeyenda"] = value;
+            else
+               atributos.Add("textoLeyenda", value);
+         }
+      }
+   }
+   
+   public class LeyendasFiscales : ComplementoComprobante {
+      readonly List<Leyenda> leyendas = new List<Leyenda>();
+      
+      public LeyendasFiscales() : base("http://www.sat.gob.mx/leyendasFiscales") { }
+      
+      public void Agregar(Leyenda leyenda) {
+         leyendas.Add(leyenda);
+      }
+      
+      public void Eliminar(int indice) {
+         if(indice >= 0 && indice < leyendas.Count)
+            leyendas.RemoveAt(indice);
+         throw new Exception("LeyendasFiscales::Eliminar(). Indice fuera de rango");
+      }
+      
+      public Leyenda this[int indice] {
+         get {
+            if(indice >= 0 && indice < leyendas.Count)
+               return leyendas[indice];
+            throw new Exception("LeyendasFiscales::[]. Indice fuera de rango");
+         }
+      }
+      
+      public int Elementos {
+         get { return leyendas.Count; }
+      }
+   }
+   
+   #endregion
+   
+   #region Nómina
    
    #region Complementos Nomina 
    
@@ -478,7 +1116,7 @@ namespace IsaRoGaMX.CFDI
    }
    
    public class Incapacidades {
-         List<Incapacidad> incapacidades;
+         readonly List<Incapacidad> incapacidades;
          
          public Incapacidades() {
             incapacidades = new List<Incapacidad>();
@@ -581,7 +1219,7 @@ namespace IsaRoGaMX.CFDI
    }
    
    public class HorasExtras {
-         List<HorasExtra> horasExtra;
+         readonly List<HorasExtra> horasExtra;
          
          public HorasExtras() {
             horasExtra = new List<HorasExtra>();
@@ -613,18 +1251,20 @@ namespace IsaRoGaMX.CFDI
    
    #endregion
    
+   #endregion
+   
    public class Nomina : ComplementoComprobante {
-      internal static string nspace = "http://www.sat.gob.mx/nomina";
       Percepciones percepciones;
       Deducciones deducciones;
       Incapacidades incapacidades;
       HorasExtras horasExtras;
       
-      public Nomina() : base() {
+      public Nomina() : base("http://www.sat.gob.mx/nomina") {
          atributos.Add("Version", "1.1");
       }
       
-      public Nomina(string version, string numEmpleado, string curp, string tipoRegimen, DateTime fechaPago, DateTime fechaInicial, DateTime fechaFinal, double numDiasPagados, string periodicidadPago) {
+      public Nomina(string version, string numEmpleado, string curp, string tipoRegimen, DateTime fechaPago, DateTime fechaInicial, DateTime fechaFinal, double numDiasPagados, string periodicidadPago) 
+         : base("http://www.sat.gob.mx/nomina") {
          atributos.Add("Version", "1.1");
          atributos.Add("NumEmpleado", numEmpleado);
          atributos.Add("CURP", curp);
@@ -646,9 +1286,7 @@ namespace IsaRoGaMX.CFDI
       
       public string RegistroPatronal {
          get {
-            if(atributos.ContainsKey("RegistroPatronal"))
-               return atributos["RegistroPatronal"];
-            return string.Empty;
+            return atributos.ContainsKey("RegistroPatronal") ? atributos["RegistroPatronal"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("RegistroPatronal"))
@@ -696,9 +1334,7 @@ namespace IsaRoGaMX.CFDI
       
       public string NumSeguridadSocial {
          get {
-            if(atributos.ContainsKey("NumSeguridadSocial"))
-               return atributos["NumSeguridadSocial"];
-            return string.Empty;
+            return atributos.ContainsKey("NumSeguridadSocial") ? atributos["NumSeguridadSocial"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("NumSeguridadSocial"))
@@ -808,9 +1444,7 @@ namespace IsaRoGaMX.CFDI
       
       public string Departamento {
          get {
-            if(atributos.ContainsKey("Departamento"))
-               return atributos["Departamento"];
-            return string.Empty;
+            return atributos.ContainsKey("Departamento") ? atributos["Departamento"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("Departamento"))
@@ -822,9 +1456,7 @@ namespace IsaRoGaMX.CFDI
       
       public string CLABE {
          get {
-            if(atributos.ContainsKey("CLABE"))
-               return atributos["CLABE"];
-            return string.Empty;
+            return atributos.ContainsKey("CLABE") ? atributos["CLABE"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("CLABE"))
@@ -836,9 +1468,7 @@ namespace IsaRoGaMX.CFDI
       
       public int Banco {
          get {
-            if(atributos.ContainsKey("Banco"))
-               return Convert.ToInt32(atributos["Banco"]);
-            return -1;
+            return atributos.ContainsKey("Banco") ? Convert.ToInt32(atributos["Banco"]) : -1;
          }
          set {
             if(atributos.ContainsKey("Banco"))
@@ -850,9 +1480,7 @@ namespace IsaRoGaMX.CFDI
       
       public string FechaInicioRelLaboralString {
          get {
-            if(atributos.ContainsKey("FechaInicioRelLaboral"))
-               return atributos["FechaInicioRelLaboral"];
-            return string.Empty;
+            return atributos.ContainsKey("FechaInicioRelLaboral") ? atributos["FechaInicioRelLaboral"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("FechaInicioRelLaboral"))
@@ -864,9 +1492,7 @@ namespace IsaRoGaMX.CFDI
       
       public DateTime FechaInicioRelLaboralDateTime {
          get {
-            if(atributos.ContainsKey("FechaInicioRelLaboral"))
-               return Conversiones.FechaISO8601DateTime(atributos["FechaInicioRelLaboral"]);
-            return DateTime.MinValue;
+            return atributos.ContainsKey("FechaInicioRelLaboral") ? Conversiones.FechaISO8601DateTime(atributos["FechaInicioRelLaboral"]) : DateTime.MinValue;
          }
          set {
             if(atributos.ContainsKey("FechaInicioRelLaboral"))
@@ -878,9 +1504,7 @@ namespace IsaRoGaMX.CFDI
       
       public int Antiguedad {
          get {
-            if(atributos.ContainsKey("Antiguedad"))
-               return Convert.ToInt32(atributos["Antiguedad"]);
-            return -1;
+            return atributos.ContainsKey("Antiguedad") ? Convert.ToInt32(atributos["Antiguedad"]) : -1;
          }
          set {
             if(atributos.ContainsKey("Antiguedad"))
@@ -892,9 +1516,7 @@ namespace IsaRoGaMX.CFDI
       
       public string Puesto {
          get {
-            if(atributos.ContainsKey("Puesto"))
-               return atributos["Puesto"];
-            return string.Empty;
+            return atributos.ContainsKey("Puesto") ? atributos["Puesto"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("Puesto"))
@@ -906,9 +1528,7 @@ namespace IsaRoGaMX.CFDI
       
       public string TipoContrato {
          get {
-            if(atributos.ContainsKey("TipoContrato"))
-               return atributos["TipoContrato"];
-            return string.Empty;
+            return atributos.ContainsKey("TipoContrato") ? atributos["TipoContrato"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("TipoContrato"))
@@ -920,9 +1540,7 @@ namespace IsaRoGaMX.CFDI
       
       public string TipoJornada {
          get {
-            if(atributos.ContainsKey("TipoJornada"))
-               return atributos["TipoJornada"];
-            return string.Empty;
+            return atributos.ContainsKey("TipoJornada") ? atributos["TipoJornada"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("TipoJornada"))
@@ -948,9 +1566,7 @@ namespace IsaRoGaMX.CFDI
       
       public string SalarioBasoCotApor {
          get {
-            if(atributos.ContainsKey("SalarioBasoCotApor"))
-               return atributos["SalarioBasoCotApor"];
-            return string.Empty;
+            return atributos.ContainsKey("SalarioBasoCotApor") ? atributos["SalarioBasoCotApor"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("SalarioBasoCotApor"))
@@ -962,9 +1578,7 @@ namespace IsaRoGaMX.CFDI
       
       public int RiesgoPuesto {
          get {
-            if(atributos.ContainsKey("RiesgoPuesto"))
-               return Convert.ToInt32(atributos["RiesgoPuesto"]);
-            return -1;
+            return atributos.ContainsKey("RiesgoPuesto") ? Convert.ToInt32(atributos["RiesgoPuesto"]) : -1;
          }
          set {
             if(atributos.ContainsKey("RiesgoPuesto"))
@@ -976,9 +1590,7 @@ namespace IsaRoGaMX.CFDI
       
       public string SalarioDiarioIntegrado {
          get {
-            if(atributos.ContainsKey("SalarioDiarioIntegrado"))
-               return atributos["SalarioDiarioIntegrado"];
-            return string.Empty;
+            return atributos.ContainsKey("SalarioDiarioIntegrado") ? atributos["SalarioDiarioIntegrado"] : string.Empty;
          }
          set {
             if(atributos.ContainsKey("SalarioDiarioIntegrado"))
@@ -988,6 +1600,7 @@ namespace IsaRoGaMX.CFDI
          }
       }
       
+      // disable ConvertToAutoProperty
       public Percepciones Percepciones {
          get { return percepciones; }
          set { percepciones = value; }
@@ -1010,7 +1623,6 @@ namespace IsaRoGaMX.CFDI
    }
    
    #endregion
-   
    
    #region Estado De Cuenta Combustible
    
@@ -1289,8 +1901,10 @@ namespace IsaRoGaMX.CFDI
    
    #endregion
    
+   #region TrasladosConceptosEstadoDeCuentaCombustible
+   
    public class TrasladosConceptosEstadoDeCuentaCombustible {
-      List<TrasladoEstadoDeCuentaCombustible> traslados;
+      readonly List<TrasladoEstadoDeCuentaCombustible> traslados;
       
       public TrasladosConceptosEstadoDeCuentaCombustible() {
          traslados = new List<TrasladoEstadoDeCuentaCombustible>();
@@ -1318,21 +1932,24 @@ namespace IsaRoGaMX.CFDI
       }
    }
    
+   #endregion
+   
+   #region EstadoDeCuentaCombustible
+   
    public class EstadoDeCuentaCombustible : ComplementoComprobante {
-      internal static string nspace = "http://www.sat.gob.mx/ecc";
       internal ConceptosEstadoDeCuentaCombustibles conceptos = new ConceptosEstadoDeCuentaCombustibles();
       
-      public EstadoDeCuentaCombustible() : base () { }
+      public EstadoDeCuentaCombustible() : base ("http://www.sat.gob.mx/ecc") { }
       
       public EstadoDeCuentaCombustible(string tipoOperacion, string numeroDeCuenta, double total)
-         : base() {
+         : base("http://www.sat.gob.mx/ecc") {
          atributos.Add("tipoOperacion", tipoOperacion);
          atributos.Add("numeroDeCuenta", numeroDeCuenta);
          atributos.Add("total", Conversiones.Importe(total));
       }
       
       public EstadoDeCuentaCombustible(string tipoOperacion, string numeroDeCuenta, double subTotal, double total)
-         : base() {
+         : base("http://www.sat.gob.mx/ecc") {
          atributos.Add("tipoOperacion", tipoOperacion);
          atributos.Add("numeroDeCuenta", numeroDeCuenta);
          atributos.Add("subTotal", Conversiones.Importe(subTotal));
@@ -1411,5 +2028,5 @@ namespace IsaRoGaMX.CFDI
    
    #endregion
    
-   
+   #endregion
 }

@@ -22,8 +22,9 @@ namespace IsaRoGaMX.CFDI
 	   Conceptos conceptos = new Conceptos();
 	   Impuestos impuestos = new Impuestos();
 	   string cadenaOriginal = string.Empty;
-	   internal List<ComplementoComprobante> complementos;
-	   Adenda addenda;
+	   Complemento complementos;
+	   //internal List<ComplementoComprobante> complementos;
+	   Addenda addenda;
 	   XmlDocument documento;
 	   const string DEFAULT_VERSION = "3.2";
 	   internal static int decimales = 2;
@@ -40,48 +41,34 @@ namespace IsaRoGaMX.CFDI
 	         throw new Exception("El t_Importe para el CFDI 3.2 especifica que debe namejar un máximo de 6 digitos");
 	   }
 	   
-	   public EstadoDeCuentaCombustible EstadoDeCuentaCombustible {
-	      get {
-	         if(combustible < 0)
-	            throw new Exception("Este comprobante no presenta ningún complemento EstadoDeCuentaCombustible");
-	         return (EstadoDeCuentaCombustible)complementos[combustible];
-	      }
-	      set { AgregarComplemento(value); }
-	   }
-	   
-	   public TimbreFiscalDigital TimbreFiscal {
-	      get {
-	         if(timbreFiscal < 0)
-	            throw new Exception("Este comprobante no presenta ningún complemento TimbreFiscalDigital");
-	         return (TimbreFiscalDigital)complementos[timbreFiscal];
-	      }
-	      set { AgregarComplemento(value); }
-	   }
-	   
-	   public Nomina Nomina {
-	      get {
-	         if(nomina < 0)
-	            throw new Exception("Este comprobante no presenta ningún complemento Nómina");
-	         return (Nomina)complementos[nomina];
-	      }
-	      set { AgregarComplemento(value); }
-	   }
-	   
 	   public void AgregarComplemento(ComplementoComprobante complemento) {
 	      if(complementos == null)
-	         complementos = new List<ComplementoComprobante>();
-	      complementos.Add(complemento);
-	      switch(complemento.GetType().Name) {
+	         complementos = new Complemento();
+	      complementos.Agregar(complemento);
+	      /*switch(complemento.GetType().Name) {
 	         case "TimbreFiscalDigital":
-	            timbreFiscal = complementos.Count -1;
+	            timbreFiscal = complementos.Elementos -1;
 	            break;
 	         case "Nomina":
-	            nomina = complementos.Count -1;;
+	            nomina = complementos.Elementos -1;;
 	            break;
 	         case "EstadoDeCuentaCombustible":
-	            combustible = complementos.Count - 1;
+	            combustible = complementos.Elementos - 1;
 	            break;
+	      }*/
+	   }
+	   
+	   /// <summary>
+	   /// Devuelve un complemento de acuerdo al criterio de búsqueda
+	   /// </summary>
+	   /// <param name="criterio">Criterio de busqueda.</param>
+	   /// <returns></returns>
+	   public ComplementoComprobante Complemento(string criterio) {
+	      for(int i = 0; i < complementos.Elementos; i++) {
+	         if(complementos[i].GetType().Name.ToLower().Contains(criterio))
+	            return complementos[i];
 	      }
+	      throw new Exception("Comprobante::Complemento. Criterio de búsqueda sin resultados");
 	   }
 	   
 	   internal XmlDocument Documento{
@@ -118,8 +105,8 @@ namespace IsaRoGaMX.CFDI
             // Retenciones
             if(this.Impuestos.Retenciones.Elementos > 0) {
                XmlElement nodoRetenciones = documento.CreateElement(comprobante.Prefix, this.Impuestos.Retenciones.GetType().Name, comprobante.NamespaceURI);
-               for(int r = 0; r < this.Impuestos.Retenciones.Elementos; r++) {
-                  XmlElement nodoRetencion = this.Impuestos.Retenciones[r].NodoXML(comprobante.Prefix, comprobante.NamespaceURI, documento);
+               for(int r = 0; r < Impuestos.Retenciones.Elementos; r++) {
+                  XmlElement nodoRetencion = Impuestos.Retenciones[r].NodoXML(comprobante.Prefix, comprobante.NamespaceURI, documento);
                   nodoRetenciones.AppendChild(nodoRetencion);
                }
                nodoImpuestos.AppendChild(nodoRetenciones);
@@ -128,8 +115,8 @@ namespace IsaRoGaMX.CFDI
             // Traslados
             if(this.Impuestos.Traslados.Elementos > 0) {
                XmlElement nodoTraslados = documento.CreateElement(comprobante.Prefix, this.Impuestos.Traslados.GetType().Name, comprobante.NamespaceURI);
-               for(int t = 0; t < this.Impuestos.Traslados.Elementos; t++) {
-                  XmlElement nodoTraslado = this.Impuestos.Traslados[t].NodoXML(comprobante.Prefix, comprobante.NamespaceURI, documento);
+               for(int t = 0; t < Impuestos.Traslados.Elementos; t++) {
+                  XmlElement nodoTraslado = Impuestos.Traslados[t].NodoXML(comprobante.Prefix, comprobante.NamespaceURI, documento);
                   nodoTraslados.AppendChild(nodoTraslado);
                }
                nodoImpuestos.AppendChild(nodoTraslados);
@@ -138,11 +125,22 @@ namespace IsaRoGaMX.CFDI
          // Se agrega el nodo de impuestos
 	      comprobante.AppendChild(nodoImpuestos);
 	      
+	      // Agregar el nodo de Complementos
+	      XmlElement nodoComplementos = documento.CreateElement(comprobante.Prefix, complementos.GetType().Name);
+	      
+	      for(int i = 0; i < complementos.Elementos; i++) {
+	         XmlElement comp = complementos[i].NodoXML(comprobante.Prefix, comprobante.NamespaceURI, documento);
+	         nodoComplementos.AppendChild(comp);
+	      }
+	      comprobante.AppendChild(nodoComplementos);
+	      
+	      
+	      
+	      
+	      //TODO Agregar el nodo de Addenda
+	      
 	      // Se agrega el comprobante al documetno
 	      documento.AppendChild(comprobante);
-	      
-	      //TODO Agregar el nodo de Complementos
-	      //TODO Agregar el nodo de Addenda
 	      
 	      // Regreso el documento XML
 	      return documento;
@@ -640,6 +638,10 @@ namespace IsaRoGaMX.CFDI
 	      get { return cadenaOriginal; }
 	   }
 	   
+	   public Complemento Complementos {
+	      get { return complementos; }
+	   }
+	   
       public override XmlElement NodoXML(string prefijo, string namespaceURI, XmlDocument documento)
       {
          // Nodo XML con los atributos de comprobante
@@ -683,7 +685,7 @@ namespace IsaRoGaMX.CFDI
       
       /// <see cref="http://solucionfactible.com/sfic/capitulos/timbrado/cadena_original.jsp"/>
       /// <seealso cref="http://stackoverflow.com/questions/2384306/how-to-transform-xml-as-a-string-w-o-using-files-in-net/2389628#2389628"/>
-      private string generaCadenaOriginal(string rutaXSLT) {         
+      public string generaCadenaOriginal(string rutaXSLT) {         
          // Fuente: 
          StringReader sri = new StringReader(Documento.OuterXml);
          XmlReader xri = XmlReader.Create(sri);

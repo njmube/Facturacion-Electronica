@@ -44,6 +44,11 @@ namespace IsaRoGaMX.IO
          return cfdi;
       }
       
+      /// <summary>
+      /// Función que lee los atributos de un nodo XML
+      /// </summary>
+      /// <param name="nodo">Nodo del que se leeran los atributos</param>
+      /// <returns>Diccionario de atributos</returns>
       private Dictionary<string, string> leerAtributos(XmlNode nodo) {
          // Diccionario de atributos
          Dictionary<string, string> atributos = new Dictionary<string, string>();
@@ -57,6 +62,10 @@ namespace IsaRoGaMX.IO
          return atributos;
       }
       
+      /// <summary>
+      /// Función que lee los nodos XML de un documento CFDI
+      /// </summary>
+      /// <param name="padre"></param>
       private void LeerNodos(XmlNode padre) {         
          // Procesamos el nodo
          switch(padre.Prefix) {
@@ -140,38 +149,46 @@ namespace IsaRoGaMX.IO
                      case "Percepciones":
                         Percepciones percepciones = new Percepciones();
                         percepciones.atributos = leerAtributos(padre);
-                        cfdi.Nomina.Percepciones = percepciones;
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.Percepciones = new Percepciones();
                         break;
                      case "Percepcion":
                         Percepcion percepcion = new Percepcion();
                         percepcion.atributos = leerAtributos(padre);
-                        cfdi.Nomina.Percepciones.Agregar(percepcion);
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.Percepciones.Agregar(percepcion);
                         break;
                      case "Deducciones":
                         Deducciones deducciones = new Deducciones();
                         deducciones.atributos = leerAtributos(padre);
-                        cfdi.Nomina.Deducciones = deducciones;
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.Deducciones = deducciones;
                         break;
                      case "Deduccion":
                         Deduccion deduccion = new Deduccion();
                         deduccion.atributos = leerAtributos(padre);
-                        cfdi.Nomina.Deducciones.Agregar(deduccion);
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.Deducciones.Agregar(deduccion);
                         break;
                      case "Incapacidades":
-                        cfdi.Nomina.Incapacidades = new Incapacidades();
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.Incapacidades = new Incapacidades();
                         break;
                      case "Incapacidad":
                         Incapacidad incapacidad = new Incapacidad();
                         incapacidad.atributos = leerAtributos(padre);
-                        cfdi.Nomina.Incapacidades.Agregar(incapacidad);
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.Incapacidades.Agregar(incapacidad);
                         break;
                      case "HorasExtras":
-                        cfdi.Nomina.HorasExtras = new HorasExtras();
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.HorasExtras = new HorasExtras();
                         break;
                      case "HorasExtra":
                         HorasExtra horasExtra = new HorasExtra();
                         horasExtra.atributos = leerAtributos(padre);
-                        cfdi.Nomina.HorasExtras.Agregar(horasExtra);
+                        nomina = cfdi.Complemento("nomina") as Nomina;
+                        nomina.HorasExtras.Agregar(horasExtra);
                         break;
                   }
                   break;
@@ -184,20 +201,34 @@ namespace IsaRoGaMX.IO
                         cfdi.AgregarComplemento(edoCta);
                         break;
                      case "Conceptos":
-                        cfdi.EstadoDeCuentaCombustible.conceptos = new ConceptosEstadoDeCuentaCombustibles();
+                        EstadoDeCuentaCombustible combustible = cfdi.Complemento("combustible") as EstadoDeCuentaCombustible;
+                        combustible.conceptos = new ConceptosEstadoDeCuentaCombustibles();
                         break;
                      case "ConceptoEstadoDeCuentaCombustible":
                         ConceptoEstadoDeCuenta concepto = new ConceptoEstadoDeCuenta();
                         concepto.atributos = leerAtributos(padre);
-                        cfdi.EstadoDeCuentaCombustible.Agregar(concepto);
+                        combustible = cfdi.Complemento("combustible") as EstadoDeCuentaCombustible;
+                        combustible.Agregar(concepto);
                         break;
                      case "Traslados":
-                        cfdi.EstadoDeCuentaCombustible.conceptos[cfdi.EstadoDeCuentaCombustible.conceptos.Elementos - 1].traslados = new TrasladosConceptosEstadoDeCuentaCombustible();
+                        combustible = cfdi.Complemento("combustible") as EstadoDeCuentaCombustible;
+                        combustible.conceptos[combustible.conceptos.Elementos - 1].traslados = new TrasladosConceptosEstadoDeCuentaCombustible();
                         break;
                      case "Traslado":
                         TrasladoEstadoDeCuentaCombustible traslado = new TrasladoEstadoDeCuentaCombustible();
                         traslado.atributos = leerAtributos(padre);
-                        cfdi.EstadoDeCuentaCombustible.conceptos[cfdi.EstadoDeCuentaCombustible.conceptos.Elementos - 1].AgregaTraslado(traslado);
+                        combustible = cfdi.Complemento("combustible") as EstadoDeCuentaCombustible;
+                        combustible.conceptos[combustible.conceptos.Elementos - 1].AgregaTraslado(traslado);
+                        break;
+                  }
+                  break;
+               }
+               case "implocal": {
+                  switch(padre.LocalName) {
+                     case "ImpuestosLocales":
+                        ImpuestosLocales implocal = new ImpuestosLocales();
+                        implocal.atributos = leerAtributos(padre);
+                        cfdi.AgregarComplemento(implocal);
                         break;
                   }
                   break;
@@ -225,7 +256,7 @@ namespace IsaRoGaMX.IO
       }
       
       /// <summary>
-      /// Valida el documento XML actual con el XSD especificado
+      /// Valida un Comprobante con su respectivo XSD
       /// </summary>
       /// <param name="rutaXSD">Ruta del archivo XSD</param>
       private void Validar(string rutaXSD){
@@ -234,6 +265,29 @@ namespace IsaRoGaMX.IO
          documento.Validate((o, e) => {
                                throw new Exception("ERROR: " + e.Message);
                       });
+      }
+      
+      /// <summary>
+      /// Valida un documento XML de un CFDI
+      /// </summary>
+      /// <param name="cfdi">Documento XML de CFDI</param>
+      /// <param name="xsd">Documento XSD</param>
+      /// <returns></returns>
+      public static bool Validar(string cfdi, string xsd) {
+         try {
+            XmlDocument doc = new XmlDocument();
+            XmlSchemaSet esq = new XmlSchemaSet();
+            doc.LoadXml(cfdi);
+            esq.Add(XmlSchema.Read(XmlReader.Create(xsd), ValidationCallback));
+            doc.Schemas = esq;
+            doc.Validate((o, e) => {
+                                  throw new Exception("ERROR: " + e.Message);
+                         });
+            // Si no ocurre ninguna excepcion es válido
+            return true;
+         } catch(Exception) {
+            return false;
+         }
       }
       
       /// <summary>
